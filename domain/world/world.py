@@ -6,7 +6,7 @@ class World:
         self.height = height
         self.screen_size = [width,height]
 
-    def set_world(self):
+    def get_world(self):
        return pygame.display.set_mode(self.screen_size)
     
     def set_background(self, window):
