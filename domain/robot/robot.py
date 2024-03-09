@@ -1,25 +1,46 @@
+import pygame
+
 class Robot:
     
-    def __init__(self, pygame, width: int, height: int, velocity: int):
-        self.robot = pygame.image.load("robot.png")
-        self.pygame = pygame
-        self.width = width
-        self.height = height
+    def __init__(self, x: int, y: int, velocity: int, width: int):
+        self.x = x
+        self.y = y
         self.velocity = velocity
-
-    def load_robot(self,world):
-        # robot = pygame.image.load("robot.png")
-        world.blit(self.robot,(self.width/2,500))
+        self.width = width
+        self.bullet_state = "ready"
 
     def move_left(self):
-        x = (self.width/2) - self.velocity
-        self.width = x*2
-        return x
+        if self._left_boundry():
+            self.x -= self.velocity
+        return self.x
         
 
     def move_right(self):
-        x = (self.width/2) + self.velocity
-        self.width = x*2
-        return x
+        if self._right_boundry():
+            self.x += self.velocity
+        return self.x
+    
+    def _left_boundry(self) -> bool:
+        return self.x > 0 
+    
+    def _right_boundry(self) -> bool:
+        return self.x < self.width - 50
+    
+    def fire(self):
+        self.bullet_state = "fire"
+
+    def get_bullet_state(self)-> str:
+        return self.bullet_state
+    
+    def reset_bullet_state(self):
+        self.bullet_state = "ready"
+    
+    def get_x_position(self):
+        return self.x
+    
+    def get_y_postion(self):
+        return self.y
+
+
 
 
