@@ -1,6 +1,7 @@
 from world.world import World
 from robot.robot import Robot
 from emeny.enemy import Enemy
+from pygame import mixer
 import pygame
 import math
 
@@ -11,6 +12,7 @@ pygame.init()
 
 clock = pygame.time.Clock()
 
+running = True
 width = 600
 height = 600
 x = (width/2) - 25
@@ -27,11 +29,17 @@ planet = Enemy(height,width)
 # create the display window
 window = world.get_world()
 window.fill((200,200,200))
+# world.set_background(window)
 game_over_window = pygame.display.set_mode((width,height))
 
+# Loading images
 player = pygame.image.load("robot.png")
 emeny = pygame.image.load("planet.png")
 bullet = pygame.image.load("bullet.png")
+
+# Background Sound
+mixer.music.load("background.wav")
+mixer.music.play(-1)
 
 bullet_x = robot.get_x_position()
 bullet_y = robot.get_y_postion()
@@ -52,82 +60,109 @@ def display_info():
     window.blit(score_board,(225,0))
     window.blit(lives_board,(425, 0))
 
-running = True
-while running:
-    keys = pygame.key.get_pressed()
-    clock.tick(FPS)
-    window.blit(player,(x,y))
-    
+def gameover_loop():
+    game_over_window = pygame.display.set_mode((width,height))
+    run = True
+    while run:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
 
-    # Enemy movement
-    enemy_x_position = planet.get_verical_postion()
-    enemy_y_postion = planet.get_horizontal_position()
+def main_loop():
+    global running
+    global x, y
+    global bullet_y, bullet_x,bullet
+    global player_lives
+    global score
 
-    if enemy_y_postion > height:
-        player_lives-=1
-        planet.reset_postion()
-        print("Player killed")
-    else:
-        window.blit(emeny,(planet.get_verical_postion(),planet.get_horizontal_position()))
-        enemy_y_postion += planet.get_velocity()
-        planet.set_horizontal_position(enemy_y_postion)
+    while running:
+        keys = pygame.key.get_pressed()
+        clock.tick(FPS)
+        window.blit(player,(x,y))
 
-    
-    # Bullet movement
-    if bullet_y <= 50:
-        robot.reset_bullet_state()
-        bullet_y = robot.get_y_postion()
+        # Enemy movement
+        enemy_x_position = planet.get_verical_postion()
+        enemy_y_postion = planet.get_horizontal_position()
 
-    if robot.get_bullet_state() is "fire":
-        bullet_y -= velocity
-        window.blit(bullet, (bullet_x+18,bullet_y)) 
-    else:
-        bullet_x = robot.get_x_position()
+        if enemy_y_postion > height:
+            player_lives-=1
+            planet.reset_postion()
+        else:
+            window.blit(emeny,(planet.get_verical_postion(),planet.get_horizontal_position()))
+            enemy_y_postion += planet.get_velocity()
+            planet.set_horizontal_position(enemy_y_postion)
         
+        # Bullet movement
+        if bullet_y <= 50:
+            robot.reset_bullet_state()
+            bullet_y = robot.get_y_postion()
 
-    # Show score
-    display_info()
-    pygame.display.update()
-    
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+        if robot.get_bullet_state() == "fire":
+            bullet_y -= velocity
+            window.blit(bullet, (bullet_x+18,bullet_y)) 
+            
+            
+
+        # Show score
+        display_info()
+        pygame.display.update()
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        # Player movement
+        if keys[pygame.K_LEFT]:
+            x = robot.move_left()
+            print("Moving left: "+str(x))
+
+        if keys[pygame.K_RIGHT]:
+            x = robot.move_right()
+            print("Moving right: "+str(x))
+        
+        if keys[pygame.K_SPACE]:
+            if robot.get_bullet_state() == "ready":
+                print("Bullet fired")
+                mixer.Sound("laser.wav").play()        
+                bullet_x = robot.get_x_position()
+                robot.fire()
+
+        if player_lives == 0:
             running = False
 
-    # Player movement
-    if keys[pygame.K_LEFT]:
-        x = robot.move_left()
-        print("Moving left: "+str(x))
+        # Collision
+        if isCollision(bullet_x,bullet_y,enemy_x_position,enemy_y_postion):
+            mixer.Sound("explosion.wav").play()
+            robot.reset_bullet_state()
+            bullet_y = robot.get_y_postion()
 
-    if keys[pygame.K_RIGHT]:
-        x = robot.move_right()
-        print("Moving right: "+str(x))
-    
-    if keys[pygame.K_SPACE]:
-        print("Bullet fired")
-        robot.fire()
+            planet.reset_postion()
+            score+=1
 
-    if player_lives == 4:
-        running = False
+            # if score is a multiple of 5 increment the speed
+            if score % 5 == 0:
+                planet.increase_velocity()
+                print("Velocity increased")
 
-    # Collision
-    if isCollision(bullet_x,bullet_y,enemy_x_position,enemy_y_postion):
-        robot.reset_bullet_state()
-        bullet_y = robot.get_y_postion()
+        # Clear the screen
+        window.fill((200,200,200))
 
-        planet.reset_postion()
-        score+=1
 
-        # if score is a multiple of 5 increment the speed
-        if score % 5 == 0:
-            planet.increase_velocity()
-            print("Velocity increased")
 
-    # Clear the screen
-    window.fill((200,200,200))
+def menu_loop():
+    menu_window = pygame.display.set_mode((width,height))
+    run = True
+    while run:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
 
-game_over_window = pygame.display.set_mode((width,height))
+
+# gameover_loop()
 # pygame.quit()
-
+                
+if __name__ == '__main__':            
+    main_loop()
 
 
 

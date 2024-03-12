@@ -10,7 +10,7 @@ class World:
        return pygame.display.set_mode(self.screen_size)
     
     def set_background(self, window):
-        background = pygame.image.load("space.jpg")
+        background = pygame.image.load("background.png")
         window.blit(background,(0,0))
     
 
